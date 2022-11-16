@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import './App.scss'
+import SunsetChart from "./SunsetChart";
 
 function App() {
   return (
@@ -54,6 +55,9 @@ function App() {
             </div>
           </div>
         </div>
+      </div>
+      <div>
+        <SunsetChart />
       </div>
     </div>
   );
