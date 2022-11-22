@@ -5,6 +5,7 @@ function SunsetChart() {
   const myDiv = useRef();
   const moon = useRef();
   const sun = useRef();
+  const divTime = useRef();
   const chart = [
     { time: 0, value: 0 },
     { time: 0, value: 0 },
@@ -29,12 +30,11 @@ function SunsetChart() {
   ];
 
   let chartResponsive = [];
-
-  let hour = 0;
-  let minute = 0;
   let h = 140;
   let w = 6400;
-  let sessionDay = "am";
+  let widthDiv = 0;
+  let start = 0;
+  let responsive = 1;
 
   const pixel = (p5, x, y) => {
     p5.rect(x, y, 1, 1);
@@ -48,36 +48,33 @@ function SunsetChart() {
     return output;
   };
 
-  let widthDiv = 0;
-  let start = 0;
-  let responsive = 1;
-
   const numberToTime = (cur) => {
+    let sessionDay = "am";
     let timeCalc = (start + cur) / (widthDiv / 12 / 60) + 425 + 12 * 60;
-    hour = Math.round(((timeCalc - 30) / 60) % 24);
-    minute = leftPad(Math.round(timeCalc % 60), 2);
+    let hour = Math.round(((timeCalc - 30) / 60) % 24);
+    let minute = leftPad(Math.round(timeCalc % 60), 2);
     if (hour > 12) {
       sessionDay = "pm";
       hour = hour % 12;
     }
     hour = hour === 0 ? 12 : hour;
 
-    return hour + " : " + minute + " " + sessionDay;
+    return hour + ":" + minute + " " + sessionDay;
   };
 
   const setup = (p5, canvasParentRef) => {
-    p5.pixelDensity(1);
+    p5.pixelDensity(1.3);
     p5.noStroke();
     widthDiv = canvasParentRef.offsetWidth;
     responsive = widthDiv / 1000;
     start = (425 - 15) * responsive;
 
-    // convert tide chart data
+    chart.forEach((item) => {
+      let t = (item.time * myDiv.current.offsetWidth) / 1000;
+      chartResponsive.push({ time: t, value: item.value });
+    });
+
     p5.createCanvas(widthDiv * 6, 280).parent(canvasParentRef);
-    for (let i = 0; i < chart.length; i++) {
-      let t = p5.round((chart[i].time * myDiv.current.offsetWidth) / 1000);
-      chartResponsive.push({ time: t, value: chart[i].value });
-    }
 
     // Draw tide
     p5.fill("#70b9ff");
@@ -90,14 +87,31 @@ function SunsetChart() {
     // Draw night
     p5.fill("#0004");
     for (let i = 0; i < 5; i++) {
-      let calcDay = -320 * responsive + i * 2000 * responsive;
-      p5.rect(calcDay, 0, 800 * responsive, 240);
+      let calcNight = -320 * responsive + i * 2000 * responsive;
+      p5.rect(calcNight, 0, 800 * responsive, 240);
     }
 
     // Write tide
-    p5.fill("darkcyan");
-    chartResponsive.forEach((item) => {
-      p5.text(item.value / 100 + " m", item.time, 240 - item.value - 10);
+    p5.fill("#63ddff5c");
+    chartResponsive.forEach((item, index) => {
+      if (index > 2 && index < chartResponsive.length - 3) {
+        p5.rect(item.time - 35, 240 - item.value + 10, 70, -40, 12);
+      }
+    });
+
+    p5.textAlign(p5.CENTER, p5.CENTER);
+    p5.fill("#0059ff").textSize(16);
+    chartResponsive.forEach((item, index) => {
+      if (index > 2 && index < chartResponsive.length - 3) {
+        p5.text(item.value / 100 + "m", item.time, 240 - item.value - 15);
+      }
+    });
+
+    p5.fill("#0059ff").textSize(14);
+    chartResponsive.forEach((item, index) => {
+      if (index > 2 && index < chartResponsive.length - 3) {
+        p5.text(numberToTime(item.time), item.time, 240 - item.value);
+      }
     });
 
     // Draw sunset graph
@@ -111,7 +125,9 @@ function SunsetChart() {
   const draw = (p5) => {
     let cur = myDiv.current.scrollLeft + widthDiv / 2;
     let sunX = cur;
-    let sunY = 240 + Math.sin(((start + cur) * Math.PI) / widthDiv) * h;
+    let sunY = p5.round(
+      240 + Math.sin(((start + cur) * Math.PI) / widthDiv) * h
+    );
 
     // draw sun
     sun.current.style.display = "block";
@@ -134,10 +150,7 @@ function SunsetChart() {
     p5.fill("#bbbfc3").textSize(16);
     p5.rect(0, 240, p5.width, 280);
 
-    // Write time
-    p5.fill("black");
-    p5.textAlign(p5.CENTER, p5.CENTER);
-    p5.text(numberToTime(cur), cur, 260);
+    divTime.current.innerHTML = numberToTime(cur);
   };
 
   return (
@@ -196,6 +209,21 @@ function SunsetChart() {
             }}
             ref={sun}
           />
+          <div
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "45px",
+              top: "-45px",
+              left: 0,
+              backgroundColor: "#ccc",
+              textAlign: "center",
+              display: "flex",
+              alignContent: "center",
+            }}
+          >
+            <div style={{ margin: "auto" }} ref={divTime}></div>
+          </div>
         </div>
       </div>
     </div>
