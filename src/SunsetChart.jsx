@@ -3,9 +3,12 @@ import Sketch from "react-p5";
 
 function SunsetChart() {
   const myDiv = useRef();
+  const myCanvas = useRef();
   const moon = useRef();
   const sun = useRef();
   const divTime = useRef();
+  const divDay = useRef();
+
   const chart = [
     { time: 0, value: 0 },
     { time: 0, value: 0 },
@@ -30,11 +33,13 @@ function SunsetChart() {
   ];
 
   let chartResponsive = [];
-  let h = 140;
+  let highGraph = 140;
   let w = 6400;
   let widthDiv = 0;
   let start = 0;
   let responsive = 1;
+  let dayStart = 13;
+  let month = "April";
 
   const pixel = (p5, x, y) => {
     p5.rect(x, y, 1, 1);
@@ -118,21 +123,22 @@ function SunsetChart() {
     p5.fill(p5.color(255, 100, 0));
     p5.textSize(12);
     for (let i = start; i < start + w; i++) {
-      pixel(p5, i - start, 240 + p5.sin((i * Math.PI) / widthDiv) * h);
+      pixel(p5, i - start, 240 + p5.sin((i * Math.PI) / widthDiv) * highGraph);
     }
   };
 
   const draw = (p5) => {
-    let cur = myDiv.current.scrollLeft + widthDiv / 2;
+    let cur =
+      myCanvas.current.canvasParentRef.current.scrollLeft + widthDiv / 2;
     let sunX = cur;
-    let sunY = p5.round(
-      240 + Math.sin(((start + cur) * Math.PI) / widthDiv) * h
-    );
+    let sunY =
+      p5.sin(((start + cur) * Math.PI) / widthDiv) * highGraph -
+      (myDiv.current.offsetHeight - 280 + 48);
 
     // draw sun
     sun.current.style.display = "block";
-    sun.current.style.top = sunY - 295 + "px";
-    if (sunY - 295 > -55) {
+    sun.current.style.top = sunY + "px";
+    if (sunY - (myDiv.current.offsetHeight - 280 + 48) > -100) {
       sun.current.style.display = "none";
     }
 
@@ -148,9 +154,16 @@ function SunsetChart() {
 
     // Box time
     p5.fill("#bbbfc3").textSize(16);
-    p5.rect(0, 240, p5.width, 280);
-
     divTime.current.innerHTML = numberToTime(cur);
+
+    // --------------day--------------
+
+    divDay.current.innerHTML =
+      dayStart +
+      (cur - 80 * responsive - ((cur - 80 * responsive) % (widthDiv * 2))) /
+        (widthDiv * 2) +
+      " " +
+      month;
   };
 
   return (
@@ -162,14 +175,19 @@ function SunsetChart() {
           position: "relative",
           maxWidth: "1000px",
           margin: "0 auto",
-          overflow: "auto",
           width: "100%",
         }}
       >
-        <Sketch setup={setup} draw={draw} className="p5" />
+        <Sketch
+          setup={setup}
+          draw={draw}
+          className="p5"
+          ref={myCanvas}
+          style={{ overflowX: "auto", margin: "auto" }}
+        />
         <div
           style={{
-            backgroundColor: "#bbbfc3",
+            // backgroundColor: "#bbbfc3",
             display: "sticky",
             position: "sticky",
             left: 0,
@@ -178,7 +196,7 @@ function SunsetChart() {
           <div
             style={{
               width: "2px",
-              backgroundImage: "linear-gradient(#fff, #bbbfc3)",
+              backgroundImage: "linear-gradient(#fff, #ccc)",
               position: "absolute",
               height: "200px",
               bottom: "0px",
@@ -214,7 +232,7 @@ function SunsetChart() {
               position: "absolute",
               width: "100%",
               height: "45px",
-              top: "-45px",
+              top: "-65px",
               left: 0,
               backgroundColor: "#ccc",
               textAlign: "center",
@@ -222,7 +240,30 @@ function SunsetChart() {
               alignContent: "center",
             }}
           >
-            <div style={{ margin: "auto" }} ref={divTime}></div>
+            <div
+              style={{ margin: "auto", display: "flex", alignItems: "center" }}
+              ref={divTime}
+            ></div>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              top: "-260px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+            ref={divDay}
+          ></div>
+          <div
+            style={{
+              position: "absolute",
+              top: "-260px",
+              left: "20px",
+            }}
+          >
+            <span style={{ color: "cyan" }}>Tide</span>
+            <span style={{ color: "cyan" }}> • </span>
+            <span style={{ color: "orange" }}>Sunrise & Sunset</span>
           </div>
         </div>
       </div>
