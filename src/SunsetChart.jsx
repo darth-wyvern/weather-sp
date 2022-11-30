@@ -9,7 +9,7 @@ function SunsetChart() {
   const divTime = useRef();
   const divDay = useRef();
 
-  // 1000 = 12:00 {25 / 18}
+  // 1000 = 12:00 => 1000 = 720 minutes
 
   const chart = [
     { time: 0, value: 0 },
@@ -73,10 +73,11 @@ function SunsetChart() {
   };
 
   const timeToNumber = (hour, minute, session) => {
+    const ratio = 1000 / 720; // ratio Distance/Time
     if (session === "am") {
-      return (hour * 60 + minute) * 1.388889 * responsive;
+      return (hour * 60 + minute) * ratio * responsive;
     } else {
-      return (hour * 60 + minute + 720) * 1.388889 * responsive;
+      return (hour * 60 + minute + 720) * ratio * responsive;
     }
   };
 
@@ -106,7 +107,7 @@ function SunsetChart() {
 
     // Draw night
     p5.fill("#0004");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       let calcNight = -320 * responsive + i * 2000 * responsive;
       p5.rect(calcNight, 0, 800 * responsive, 240);
     }
@@ -119,7 +120,7 @@ function SunsetChart() {
       }
     });
 
-    // Write tide
+    // Write tide value
     p5.textAlign(p5.CENTER, p5.CENTER);
     p5.fill("#0059ff").textSize(16);
     chartResponsive.forEach((item, index) => {
@@ -128,7 +129,7 @@ function SunsetChart() {
       }
     });
 
-    // Write tide
+    // Write tide time
     p5.fill("#0059ff").textSize(14);
     chartResponsive.forEach((item, index) => {
       if (index > 2 && index < chartResponsive.length - 3) {
@@ -143,9 +144,11 @@ function SunsetChart() {
       pixel(p5, i - start, 240 + p5.sin((i * Math.PI) / widthDiv) * highGraph);
     }
 
+    // draw rect bottom chart
     p5.fill("#ccc");
     p5.rect(0, 240, p5.width, 45);
 
+    // Write const time title
     p5.textStyle(p5.BOLD);
     p5.fill("#f98a00").textSize(15);
     for (let i = 0; i < 3; i++) {
@@ -169,7 +172,7 @@ function SunsetChart() {
 
     // Draw moon
     moon.current.style.display = "none";
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       let calcIsDay = -320 * responsive + i * 2000 * responsive;
 
       if (sunX > calcIsDay && sunX < calcIsDay + 800 * responsive) {
@@ -177,7 +180,7 @@ function SunsetChart() {
       }
     }
 
-    // Box time
+    // write time to divTime
     p5.fill("#bbbfc3").textSize(16);
     divTime.current.innerHTML = numberToTime(cur);
 
