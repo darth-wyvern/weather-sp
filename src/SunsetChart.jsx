@@ -9,6 +9,8 @@ function SunsetChart() {
   const divTime = useRef();
   const divDay = useRef();
 
+  // 1000 = 12:00 {25 / 18}
+
   const chart = [
     { time: 0, value: 0 },
     { time: 0, value: 0 },
@@ -51,6 +53,9 @@ function SunsetChart() {
       output = "0" + output;
     }
     return output;
+    // 1 => 01
+    // 12 => 12
+    // 123 => 123
   };
 
   const numberToTime = (cur) => {
@@ -67,6 +72,14 @@ function SunsetChart() {
     return hour + ":" + minute + " " + sessionDay;
   };
 
+  const timeToNumber = (hour, minute, session) => {
+    if (session === "am") {
+      return (hour * 60 + minute) * 1.388889 * responsive;
+    } else {
+      return (hour * 60 + minute + 720) * 1.388889 * responsive;
+    }
+  };
+
   const setup = (p5, canvasParentRef) => {
     p5.pixelDensity(1.3);
     p5.noStroke();
@@ -74,14 +87,16 @@ function SunsetChart() {
     responsive = widthDiv / 1000;
     start = (425 - 15) * responsive;
 
+    // convert data to responsive
     chart.forEach((item) => {
       let t = (item.time * myDiv.current.offsetWidth) / 1000;
       chartResponsive.push({ time: t, value: item.value });
     });
 
+    // create canvas
     p5.createCanvas(widthDiv * 6, 280).parent(canvasParentRef);
 
-    // Draw tide
+    // Draw tide sine chart
     p5.fill("#70b9ff");
     p5.beginShape();
     chartResponsive.forEach((item) => {
@@ -96,7 +111,7 @@ function SunsetChart() {
       p5.rect(calcNight, 0, 800 * responsive, 240);
     }
 
-    // Write tide
+    // draw rect tide
     p5.fill("#63ddff5c");
     chartResponsive.forEach((item, index) => {
       if (index > 2 && index < chartResponsive.length - 3) {
@@ -104,6 +119,7 @@ function SunsetChart() {
       }
     });
 
+    // Write tide
     p5.textAlign(p5.CENTER, p5.CENTER);
     p5.fill("#0059ff").textSize(16);
     chartResponsive.forEach((item, index) => {
@@ -112,6 +128,7 @@ function SunsetChart() {
       }
     });
 
+    // Write tide
     p5.fill("#0059ff").textSize(14);
     chartResponsive.forEach((item, index) => {
       if (index > 2 && index < chartResponsive.length - 3) {
@@ -125,20 +142,28 @@ function SunsetChart() {
     for (let i = start; i < start + w; i++) {
       pixel(p5, i - start, 240 + p5.sin((i * Math.PI) / widthDiv) * highGraph);
     }
+
+    p5.fill("#ccc");
+    p5.rect(0, 240, p5.width, 45);
+
+    p5.textStyle(p5.BOLD);
+    p5.fill("#f98a00").textSize(15);
+    for (let i = 0; i < 3; i++) {
+      p5.text("7:09pm", timeToNumber(i * 24 + 7, 9, "pm"), 260);
+      p5.text("7:05am", timeToNumber(i * 24 + 7, 5, "am"), 260);
+    }
   };
 
   const draw = (p5) => {
     let cur =
       myCanvas.current.canvasParentRef.current.scrollLeft + widthDiv / 2;
     let sunX = cur;
-    let sunY =
-      p5.sin(((start + cur) * Math.PI) / widthDiv) * highGraph -
-      (myDiv.current.offsetHeight - 280 + 48);
+    let sunY = 230 + p5.sin(((start + cur) * Math.PI) / widthDiv) * highGraph;
 
     // draw sun
     sun.current.style.display = "block";
     sun.current.style.top = sunY + "px";
-    if (sunY - (myDiv.current.offsetHeight - 280 + 48) > -100) {
+    if (sunY > 240) {
       sun.current.style.display = "none";
     }
 
@@ -156,14 +181,11 @@ function SunsetChart() {
     p5.fill("#bbbfc3").textSize(16);
     divTime.current.innerHTML = numberToTime(cur);
 
-    // --------------day--------------
-
-    divDay.current.innerHTML =
-      dayStart +
+    // calc day
+    let calcDay =
       (cur - 80 * responsive - ((cur - 80 * responsive) % (widthDiv * 2))) /
-        (widthDiv * 2) +
-      " " +
-      month;
+      (widthDiv * 2);
+    divDay.current.innerHTML = dayStart + calcDay + "th " + month;
   };
 
   return (
@@ -175,9 +197,85 @@ function SunsetChart() {
           position: "relative",
           maxWidth: "1000px",
           margin: "0 auto",
-          width: "100%",
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            fontSize: "13pt",
+          }}
+        >
+          <span style={{ color: "cyan" }}>Tide</span>
+          <span style={{ color: "cyan" }}> • </span>
+          <span style={{ color: "#f98a00" }}>Sunrise & Sunset</span>
+        </div>
+
+        <div
+          className="day"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "30px",
+            transform: "translateX(-50%)",
+          }}
+          ref={divDay}
+        />
+
+        <div
+          style={{
+            width: "2px",
+            backgroundImage: "linear-gradient(#fff, #ccc)",
+            position: "absolute",
+            height: "200px",
+            bottom: "0px",
+            marginBottom: "45px",
+            left: "calc(50% - 1px)",
+          }}
+        />
+
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/196/196685.png"
+          alt=""
+          style={{
+            position: "absolute",
+            width: "20px",
+            height: "20px",
+            top: "50px",
+            left: "calc(50% - 10px)",
+          }}
+          ref={moon}
+        />
+
+        <img
+          src="https://i.pinimg.com/originals/35/8b/f6/358bf617c093163955378bec6b0f492e.png"
+          alt=""
+          style={{
+            position: "absolute",
+            width: "20px",
+            height: "20px",
+            left: "calc(50% - 10px)",
+          }}
+          ref={sun}
+        />
+
+        <div
+          className="time"
+          style={{
+            position: "absolute",
+            width: "max-content",
+            height: "40px",
+            top: "240px",
+            display: "flex",
+            alignItems: "center",
+            left: "50%",
+            fontWeight: "777",
+            color: "#5f5f5f",
+            transform: "translateX(-50%)",
+            backgroundColor: "#ccc",
+          }}
+          ref={divTime}
+        />
+
         <Sketch
           setup={setup}
           draw={draw}
@@ -185,87 +283,6 @@ function SunsetChart() {
           ref={myCanvas}
           style={{ overflowX: "auto", margin: "auto" }}
         />
-        <div
-          style={{
-            // backgroundColor: "#bbbfc3",
-            display: "sticky",
-            position: "sticky",
-            left: 0,
-          }}
-        >
-          <div
-            style={{
-              width: "2px",
-              backgroundImage: "linear-gradient(#fff, #ccc)",
-              position: "absolute",
-              height: "200px",
-              bottom: "0px",
-              marginBottom: "45px",
-              left: "calc(50% - 1px)",
-            }}
-          />
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/196/196685.png"
-            alt=""
-            style={{
-              position: "absolute",
-              width: "20px",
-              height: "20px",
-              top: "-200px",
-              left: "calc(50% - 10px)",
-            }}
-            ref={moon}
-          />
-          <img
-            src="https://i.pinimg.com/originals/35/8b/f6/358bf617c093163955378bec6b0f492e.png"
-            alt=""
-            style={{
-              position: "absolute",
-              width: "20px",
-              height: "20px",
-              left: "calc(50% - 10px)",
-            }}
-            ref={sun}
-          />
-          <div
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "45px",
-              top: "-65px",
-              left: 0,
-              backgroundColor: "#ccc",
-              textAlign: "center",
-              display: "flex",
-              alignContent: "center",
-            }}
-          >
-            <div
-              style={{ margin: "auto", display: "flex", alignItems: "center" }}
-              ref={divTime}
-            ></div>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              top: "-260px",
-              left: "50%",
-              transform: "translateX(-50%)",
-            }}
-            ref={divDay}
-          ></div>
-          <div
-            style={{
-              position: "absolute",
-              top: "-260px",
-              left: "20px",
-            }}
-          >
-            <span style={{ color: "cyan" }}>Tide</span>
-            <span style={{ color: "cyan" }}> • </span>
-            <span style={{ color: "orange" }}>Sunrise & Sunset</span>
-          </div>
-        </div>
       </div>
     </div>
   );
